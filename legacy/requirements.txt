@@ -1,0 +1,18 @@
+# Minimal requirements for the Streamlit CONSORT EDA app
+streamlit>=1.25.0
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Optional - enable reading Excel files if you want to support .xlsx uploads
+openpyxl>=3.0.0
+
+# Optional utilities you may find useful later (charts, downloads)
+matplotlib>=3.7.0
+plotly>=5.0.0
+
+# If you plan to export Excel from the app
+openpyxl>=3.0.0
+
+# Lock the Python version recommended
+# (uncomment or set in your environment instead of installing via pip)
+# python_version ~= "3.10"
