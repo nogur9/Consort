@@ -101,7 +101,7 @@ def plot_cumulative_incidence_with_risk(
     """
     surv_df = subset[["group", "waiting_duration", "did_started_therapy"]].copy()
     surv_df = surv_df.dropna(subset=["waiting_duration", "did_started_therapy"])
-    surv_df = surv_df[surv_df["waiting_duration"] >= 0]
+    # surv_df = surv_df[surv_df["waiting_duration"] >= 0]
 
     if surv_df.empty:
         return False, None
