@@ -25,7 +25,7 @@ def _build_candidates(rel_paths: List[str]) -> List[Path]:
     return unique_candidates
 
 
-DATA_FILE =  "data/‏‏של __מאסטר מעקב תורים iIPC_IPT - עותק.xlsx"
+DATA_FILE =  "data/anon_master.xlsx"
 
 
 GROUPS_FILE ="data/טבלת הקצאה רנדומלית לתנאי הניסוי והבקרה.xlsx"
@@ -65,6 +65,7 @@ ALIASES = {
     ],
     "First name": ["שם פרטי", "שם פרטי של המטופל"],
     "Last name": ["שם משפחה", "שם משפחה של המטופל"],
+    "Clinic": ['מרפאה']
 }
 
 GROUPS_RENAME = {

@@ -57,7 +57,7 @@ def load_processed_data() -> pd.DataFrame:
 # --------------------------------------------------------------------------- #
 # UI helpers
 # --------------------------------------------------------------------------- #
-def render_sidebar_filters(df: pd.DataFrame) -> Tuple[str, int, datetime, List[str]]:
+def render_sidebar_filters(df: pd.DataFrame) -> Tuple[str, int, datetime, List[str], List[str]]:
     st.sidebar.header("🔧 Filters & Settings")
     selected_group = st.sidebar.selectbox("CONSORT group", CONSORT_GROUPS, index=0)
     slider_cap = max(3650, int(MAX_WAITING_DAYS_DEFAULT))
@@ -98,7 +98,16 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[str, int, datetime, List[s
         help="Filter the analysis to a subset of groups.",
     )
 
-    return selected_group, max_wait, intake_date_filter, selected_groups
+    clinic_options = sorted(df["Clinic"].unique().tolist())
+
+    selected_clinics = st.sidebar.multiselect(
+        "Clinics",
+        options=clinic_options,
+        default=clinic_options,
+        help="Filter the analysis to a specific Clinic",
+    )
+
+    return selected_group, max_wait, intake_date_filter, selected_groups, selected_clinics
 
 
 def apply_filters(
@@ -107,11 +116,15 @@ def apply_filters(
     max_wait: int,
     intake_threshold,
     group_selection: List[str],
+    clinic_selection: List[str],
 ) -> Tuple[pd.DataFrame, List[str]]:
     analysis_arms = group_selection.copy() if group_selection else DEFAULT_ARMS.copy()
 
     filtered = df[df["group"].isin(analysis_arms) | df["group"].isna()].copy()
     filtered["group"] = filtered["group"].fillna("Missing Group")
+
+    if clinic_selection:
+        filtered = filtered[filtered["Clinic"].isin(clinic_selection)]
 
     if group_selection:
         filtered = filtered[filtered["group"].isin(group_selection)]
@@ -269,9 +282,10 @@ def main():
         max_wait,
         intake_threshold,
         group_selection,
+        clinic_selection
     ) = render_sidebar_filters(df)
     df_filtered, analysis_arms = apply_filters(
-        df, selected_group, max_wait, intake_threshold, group_selection
+        df, selected_group, max_wait, intake_threshold, group_selection, clinic_selection
     )
     render_sidebar_metrics(df_filtered, analysis_arms)
 
