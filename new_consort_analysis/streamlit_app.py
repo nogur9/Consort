@@ -18,6 +18,7 @@ from data_pipeline import build_patient_dataset
 from visualizations import (
     plot_cumulative_incidence_with_risk,
     plot_metric_bar,
+    plot_waiting_histogram,
     summarize_by_arm,
 )
 
@@ -163,10 +164,12 @@ def build_summary(df: pd.DataFrame, analysis_arms):
 
 
 def render_metric_tabs(summary_df, df_filtered, totals, analysis_arms):
-    tab_titles = [conf["title"] for conf in METRIC_TABS] + ["Cumulative Incidence"]
+    base_titles = [conf["title"] for conf in METRIC_TABS]
+    tab_titles = base_titles + ["Cumulative Incidence", "Waiting Histogram"]
     tabs = st.tabs(tab_titles)
 
-    for conf, tab in zip(METRIC_TABS, tabs[:-1]):
+    metric_tabs = tabs[: len(METRIC_TABS)]
+    for conf, tab in zip(METRIC_TABS, metric_tabs):
         with tab:
             st.write(conf["description"])
             fig = plot_metric_bar(
@@ -214,13 +217,21 @@ def render_metric_tabs(summary_df, df_filtered, totals, analysis_arms):
             ):
                 st.info("`suiteable_for_pp` field is not available in this dataset.")
 
-    with tabs[-1]:
+    with tabs[-2]:
         st.write("Event probability over time helps compare how quickly groups start therapy.")
         plotted, ci_fig = plot_cumulative_incidence_with_risk(df_filtered, analysis_arms)
         if plotted and ci_fig:
             st.pyplot(ci_fig)
         else:
             st.info("Not enough data to compute cumulative incidence for the selected filters.")
+
+    with tabs[-1]:
+        st.write("Waiting-time distribution per group.")
+        hist_fig = plot_waiting_histogram(df_filtered, analysis_arms)
+        if hist_fig:
+            st.pyplot(hist_fig)
+        else:
+            st.info("Not enough waiting-time data to draw the histogram for the selected filters.")
 
 
 def render_download_button(summary_display: pd.DataFrame, selected_group: str):

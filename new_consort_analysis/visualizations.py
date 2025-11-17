@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from lifelines import KaplanMeierFitter
-from lifelines.plotting import add_at_risk_counts
 
 
 def summarize_by_arm(subset: pd.DataFrame, arms: List[str]) -> pd.DataFrame:
@@ -135,4 +134,34 @@ def plot_cumulative_incidence_with_risk(
     ax.set_ylim(0, 1.05)
     plt.tight_layout()
     return True, fig
+
+
+def plot_waiting_histogram(
+    subset: pd.DataFrame, arms: List[str], bins: int = 30
+) -> Optional[plt.Figure]:
+    """Plot waiting-time histogram with hue per group."""
+    data = subset[subset["waiting_duration"].notna() & subset["group"].isin(arms)]
+    if data.empty:
+        return None
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for arm in arms:
+        arm_df = data[data["group"] == arm]
+        if arm_df.empty:
+            continue
+        ax.hist(
+            arm_df["waiting_duration"],
+            bins=bins,
+            alpha=0.6,
+            label=arm,
+            edgecolor="black",
+        )
+
+    ax.set_title("Waiting time distribution by group", fontsize=14)
+    ax.set_xlabel("Waiting duration (days)", fontsize=12)
+    ax.set_ylabel("Count", fontsize=12)
+    ax.grid(axis="y", alpha=0.3)
+    ax.legend()
+    plt.tight_layout()
+    return fig
 
