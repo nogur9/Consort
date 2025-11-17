@@ -45,7 +45,7 @@ CONSORT_GROUPS = [
     "Not Cooperative",
 ]
 
-MAX_WAITING_DAYS_DEFAULT = 1000000
+MAX_WAITING_DAYS_DEFAULT = 3650
 
 ALIASES = {
     "raw_id": [";", "קוד", "קוד מטופל", "קוד נבדק"],
