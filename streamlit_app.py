@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 import streamlit as st
 
 from app_config import (
     CONSORT_GROUPS,
+    DATA_FILE,
     DEFAULT_ARMS,
     MAX_WAITING_DAYS_DEFAULT,
     METRIC_TABS,
@@ -49,15 +50,37 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 # Data access
 # --------------------------------------------------------------------------- #
 @st.cache_data
-def load_processed_data() -> pd.DataFrame:
+def load_processed_data(data_bytes: Optional[bytes]) -> pd.DataFrame:
     """Load and cache the fully processed dataset."""
-    return build_patient_dataset()
+    return build_patient_dataset(data_source=data_bytes)
+
+
+def select_data_source() -> Optional[bytes]:
+    st.sidebar.subheader("Data source")
+    mode = st.sidebar.radio(
+        "Master workbook source",
+        ["Use default file", "Upload file"],
+        help="Choose whether to rely on the bundled master file or upload one.",
+    )
+    if mode == "Upload file":
+        uploaded = st.sidebar.file_uploader(
+            "Upload Excel file", type=["xlsx"], help="Upload a master workbook (.xlsx)."
+        )
+        if uploaded is not None:
+            return uploaded.getvalue()
+        st.sidebar.info("Upload a file to override the default dataset.")
+        return None
+
+    st.sidebar.caption(f"Using default data file: {DATA_FILE}")
+    return None
 
 
 # --------------------------------------------------------------------------- #
 # UI helpers
 # --------------------------------------------------------------------------- #
-def render_sidebar_filters(df: pd.DataFrame) -> Tuple[str, int, datetime, List[str], List[str]]:
+def render_sidebar_filters(
+    df: pd.DataFrame,
+) -> Tuple[str, int, Optional[datetime], List[str], List[str]]:
     st.sidebar.header("🔧 Filters & Settings")
     selected_group = st.sidebar.selectbox("CONSORT group", CONSORT_GROUPS, index=0)
     slider_cap = max(3650, int(MAX_WAITING_DAYS_DEFAULT))
@@ -98,13 +121,20 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[str, int, datetime, List[s
         help="Filter the analysis to a subset of groups.",
     )
 
-    clinic_options = sorted(df["Clinic"].unique().tolist())
+    if "Clinic" in df.columns:
+        clinic_options = sorted(df["Clinic"].dropna().unique().tolist())
+    else:
+        clinic_options = []
 
-    selected_clinics = st.sidebar.multiselect(
-        "Clinics",
-        options=clinic_options,
-        default=clinic_options,
-        help="Filter the analysis to a specific Clinic",
+    selected_clinics = (
+        st.sidebar.multiselect(
+            "Clinics",
+            options=clinic_options,
+            default=clinic_options,
+            help="Filter the analysis to a specific clinic.",
+        )
+        if clinic_options
+        else []
     )
 
     return selected_group, max_wait, intake_date_filter, selected_groups, selected_clinics
@@ -123,7 +153,7 @@ def apply_filters(
     filtered = df[df["group"].isin(analysis_arms) | df["group"].isna()].copy()
     filtered["group"] = filtered["group"].fillna("Missing Group")
 
-    if clinic_selection:
+    if clinic_selection and "Clinic" in filtered.columns:
         filtered = filtered[filtered["Clinic"].isin(clinic_selection)]
 
     if group_selection:
@@ -274,15 +304,16 @@ def render_raw_data_sections(df_filtered: pd.DataFrame, groups: List[str]):
 def main():
     st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>', unsafe_allow_html=True)
 
+    data_bytes = select_data_source()
     with st.spinner("Loading and preprocessing data..."):
-        df = load_processed_data()
+        df = load_processed_data(data_bytes)
 
     (
         selected_group,
         max_wait,
         intake_threshold,
         group_selection,
-        clinic_selection
+        clinic_selection,
     ) = render_sidebar_filters(df)
     df_filtered, analysis_arms = apply_filters(
         df, selected_group, max_wait, intake_threshold, group_selection, clinic_selection

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from io import BytesIO
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -34,10 +35,18 @@ def _locate_first_existing(candidates: Iterable[Path]) -> Path:
     )
 
 
-def _load_workbooks() -> Tuple[pd.ExcelFile, pd.ExcelFile]:
-    """Load the source workbooks for patient data and group assignments."""
+def _resolve_data_source(data_source):
+    if data_source is None:
+        return DATA_FILE
+    if isinstance(data_source, (bytes, bytearray)):
+        return BytesIO(data_source)
+    return data_source
 
-    return pd.ExcelFile(DATA_FILE), pd.ExcelFile(GROUPS_FILE)
+
+def _load_workbooks(data_source=None) -> Tuple[pd.ExcelFile, pd.ExcelFile]:
+    """Load the source workbooks for patient data and group assignments."""
+    data_input = _resolve_data_source(data_source)
+    return pd.ExcelFile(data_input), pd.ExcelFile(GROUPS_FILE)
 
 
 # --------------------------------------------------------------------------- #
@@ -99,9 +108,9 @@ def _build_group_lookup(groups_xls: pd.ExcelFile) -> Dict[str, str]:
     return lookup
 
 
-def load_and_normalize_data() -> pd.DataFrame:
+def load_and_normalize_data(data_source=None) -> pd.DataFrame:
     """Run preprocessing step 1: load workbooks, normalize columns, fill groups."""
-    xls, groups_xls = _load_workbooks()
+    xls, groups_xls = _load_workbooks(data_source=data_source)
     patient_df = _extract_patient_rows(xls)
     group_lookup = _build_group_lookup(groups_xls)
 
@@ -306,9 +315,9 @@ def enrich_with_consort_metrics(df: pd.DataFrame) -> pd.DataFrame:
 # --------------------------------------------------------------------------- #
 # Public API
 # --------------------------------------------------------------------------- #
-def build_patient_dataset() -> pd.DataFrame:
+def build_patient_dataset(data_source=None) -> pd.DataFrame:
     """Convenience function that runs all preprocessing stages."""
-    normalized = load_and_normalize_data()
+    normalized = load_and_normalize_data(data_source=data_source)
     aggregated = aggregate_patient_records(normalized)
     return enrich_with_consort_metrics(aggregated)
 
