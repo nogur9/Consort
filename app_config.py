@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import List
 
+import numpy as np
+
 # Base paths -----------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
@@ -42,7 +44,7 @@ CONSORT_GROUPS = [
     "In Waiting List",
     "Finished",
     "Active",
-    "Not Cooperative",
+    "Not Cooperative"
 ]
 
 MAX_WAITING_DAYS_DEFAULT = 3650
@@ -58,7 +60,7 @@ ALIASES = {
         "שאלוני סוף התערבות (8 שבועות)",
         "תאריך סיום התערבות",
     ],
-    "suiteable_for_pp": [
+    "suitable_for_pp": [
         'מתאים לתומך ע"י קלינאי 1. כן 0. לא',
         'מתאימים לתומך? 1.כן 0.לא',
         'מתאימים לתומך? 1.כן 0.לא',
@@ -66,6 +68,22 @@ ALIASES = {
     "First name": ["שם פרטי", "שם פרטי של המטופל"],
     "Last name": ["שם משפחה", "שם משפחה של המטופל"],
     "Clinic": ['מרפאה']
+
+}
+
+
+
+
+SUITABLE_FOR_PP_RENAME = {
+    '1': 1,
+    '0': 0,
+    'ללא אובדנות': np.nan,
+    'לא- הומלץ רק שאלונים': 0,
+    'רק שאלונים': np.nan,
+    'מעקבים': np.nan,
+    'ל.ר. ': np.nan,
+    'ל.ר.': np.nan,
+    'ל.ר': np.nan
 }
 
 GROUPS_RENAME = {
@@ -132,7 +150,7 @@ METRIC_TABS = [
     },
     {
         "title": "Suitable for PP",
-        "column": "suiteable_for_pp_mean",
+        "column": "suitable_for_pp",
         "label": "Proportion Suitable for PP",
         "description": "Share of patients suitable for PP treatment.",
     },

@@ -195,12 +195,14 @@ def build_summary(df: pd.DataFrame, analysis_arms):
         "group": "Total",
         "count": len(df),
         "waiting_duration_mean": df["waiting_duration"].mean(skipna=True),
-        "waiting_duration_std": df["waiting_duration"].std(skipna=True),
+        "did_started_therapy": df["did_started_therapy"].sum(skipna=True),
+        "suitable_for_pp": df["suitable_for_pp"].sum(skipna=True),
+
         "waiting_duration_median": df["waiting_duration"].median(skipna=True),
         "did_started_therapy_mean": df["did_started_therapy"].mean(skipna=True),
-        "suiteable_for_pp_mean": df["suiteable_for_pp"].mean(skipna=True)
-        if "suiteable_for_pp" in df.columns
-        else None,
+        "suitable_for_pp_mean": df["suitable_for_pp"].mean(skipna=True),
+        "waiting_duration_std": df["waiting_duration"].std(skipna=True),
+
     }
     summary_display = pd.concat([summary, pd.DataFrame([total_row])], ignore_index=True)
     return summary, summary_display.round(2), total_row
@@ -255,10 +257,10 @@ def render_metric_tabs(summary_df, df_filtered, totals, analysis_arms):
                 )
 
             if (
-                conf["column"] == "suiteable_for_pp_mean"
-                and "suiteable_for_pp" not in df_filtered.columns
+                conf["column"] == "suitable_for_pp"
+                and "suitable_for_pp" not in df_filtered.columns
             ):
-                st.info("`suiteable_for_pp` field is not available in this dataset.")
+                st.info("`suitable_for_pp` field is not available in this dataset.")
 
     with tabs[-2]:
         st.write("Event probability over time helps compare how quickly groups start therapy.")

@@ -6,6 +6,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
+import numpy as np
 import pandas as pd
 
 from app_config import (
@@ -18,6 +19,7 @@ from app_config import (
     GROUPS_RENAME,
     MAX_WAITING_DAYS_DEFAULT,
     PRIORITY_MAP,
+    SUITABLE_FOR_PP_RENAME
 )
 
 
@@ -75,6 +77,12 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
 
     if "group" in sheet_df.columns:
         sheet_df["group"] = sheet_df["group"].replace(GROUPS_RENAME)
+
+    if "suitable_for_pp" in sheet_df.columns:
+        sheet_df["suitable_for_pp"] = sheet_df["suitable_for_pp"].replace(SUITABLE_FOR_PP_RENAME)
+
+    if "Clinic" in sheet_df.columns:
+        sheet_df['Clinic'] = sheet_df['Clinic'].str.strip()
 
     sheet_columns = [col for col in columns if col in sheet_df.columns]
     return sheet_df[sheet_columns].reset_index(drop=True)
@@ -251,7 +259,13 @@ def _create_consort_rules() -> Dict[str, Dict[str, List[str]]]:
             "not_in": EXCLUDE_SHEETS,
         },
         "Not Cooperative": {'isin': ['אין שת"פ טיפולי'], "not_in": []},
+
     }
+    for sheet in rules["N"]["isin"]:
+        if sheet not in ["CAU", "IPC-SSC"]:
+            rules[f"{sheet}__טבלה"] = {'isin': [sheet], "not_in": []}
+            CONSORT_GROUPS.append(f"{sheet}__טבלה")
+
 
     for key, rule in rules.items():
         for bucket in ("isin", "not_in"):
@@ -275,20 +289,11 @@ def _apply_consort_rules(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def _to_bool(value) -> bool:
+def _to_bool(value):
     if pd.isna(value):
-        return False
-    if isinstance(value, bool):
-        return value
-    value_str = str(value).strip().lower()
-    if value_str in {"1", "true", "t", "yes", "y"}:
-        return True
-    if value_str in {"0", "false", "f", "no", "n", ""}:
-        return False
-    try:
-        return bool(int(value_str))
-    except ValueError:
-        return False
+        return np.nan
+    else:
+        return bool(value)
 
 
 def enrich_with_consort_metrics(df: pd.DataFrame) -> pd.DataFrame:
@@ -306,8 +311,8 @@ def enrich_with_consort_metrics(df: pd.DataFrame) -> pd.DataFrame:
     enriched = enriched[~(enriched["waiting_duration"] > MAX_WAITING_DAYS_DEFAULT)]
 
     enriched["did_started_therapy"] = pd.notna(enriched[end])
-    if "suiteable_for_pp" in enriched.columns:
-        enriched["suiteable_for_pp"] = enriched["suiteable_for_pp"].apply(_to_bool)
+    if "suitable_for_pp" in enriched.columns:
+        enriched["suitable_for_pp"] = enriched["suitable_for_pp"].apply(_to_bool)
 
     return enriched
 

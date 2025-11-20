@@ -20,11 +20,13 @@ def summarize_by_arm(subset: pd.DataFrame, arms: List[str]) -> pd.DataFrame:
                 {
                     "group": arm,
                     "count": 0,
+                    "did_started_therapy": np.nan,
+                    "suitable_for_pp": np.nan,
                     "waiting_duration_mean": np.nan,
                     "waiting_duration_std": np.nan,
                     "waiting_duration_median": np.nan,
                     "did_started_therapy_mean": np.nan,
-                    "suiteable_for_pp_mean": np.nan,
+                    "suitable_for_pp_mean": np.nan,
                 }
             )
             continue
@@ -34,25 +36,19 @@ def summarize_by_arm(subset: pd.DataFrame, arms: List[str]) -> pd.DataFrame:
         else:
             count_sum = len(arm_df)
 
-        suiteable_mean = (
-            arm_df["suiteable_for_pp"].mean(skipna=True)
-            if "suiteable_for_pp" in arm_df.columns
-            else np.nan
-        )
 
         rows.append(
             {
                 "group": arm,
                 "count": int(count_sum) if not pd.isna(count_sum) else 0,
                 "waiting_duration_mean": arm_df["waiting_duration"].mean(skipna=True),
+                "did_started_therapy": arm_df["did_started_therapy"].sum(skipna=True),
+                "suitable_for_pp": arm_df["suitable_for_pp"].sum(skipna=True),
+
                 "waiting_duration_std": arm_df["waiting_duration"].std(skipna=True),
-                "waiting_duration_median": arm_df["waiting_duration"].median(
-                    skipna=True
-                ),
-                "did_started_therapy_mean": arm_df["did_started_therapy"].mean(
-                    skipna=True
-                ),
-                "suiteable_for_pp_mean": suiteable_mean,
+                "waiting_duration_median": arm_df["waiting_duration"].median(skipna=True),
+                "did_started_therapy_mean": arm_df["did_started_therapy"].mean(skipna=True),
+                "suitable_for_pp_mean": arm_df["suitable_for_pp"].mean(skipna=True),
             }
         )
 
