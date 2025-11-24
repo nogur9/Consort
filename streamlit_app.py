@@ -307,8 +307,23 @@ def main():
     st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>', unsafe_allow_html=True)
 
     data_bytes = select_data_source()
-    with st.spinner("Loading and preprocessing data..."):
-        df = load_processed_data(data_bytes)
+    try:
+        with st.spinner("Loading and preprocessing data..."):
+            df = load_processed_data(data_bytes)
+    except ValueError as e:
+        # Handle date validation errors
+        if "Invalid date values" in str(e):
+            st.error("❌ **Date Validation Error**")
+            st.error(str(e))
+            st.info("💡 **Tip**: Please fix the invalid date values in your Excel file and try again. Dates should be in a standard format (e.g., YYYY-MM-DD, DD/MM/YYYY) or left empty.")
+            return
+        else:
+            # Re-raise other ValueErrors
+            raise
+    except Exception as e:
+        st.error(f"❌ **Error loading data**: {str(e)}")
+        st.info("Please check your data file and try again.")
+        return
 
     (
         selected_group,

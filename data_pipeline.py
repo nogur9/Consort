@@ -133,10 +133,19 @@ def load_and_normalize_data(data_source=None) -> pd.DataFrame:
 # Step 2 - Priority aggregation and date parsing
 # --------------------------------------------------------------------------- #
 def _parse_date(value):
+    """Parse a single date value, returning pd.NaT if unparseable."""
+    # Skip NaN values
+    if pd.isna(value):
+        return pd.NaT
+    
+    # Try each format
     for fmt in DATE_FORMATS:
         try:
             if isinstance(value, str):
                 value = value.strip()
+                # Skip empty strings after stripping
+                if not value:
+                    return pd.NaT
             return pd.to_datetime(value, format=fmt)
         except (ValueError, TypeError):
             continue
@@ -144,10 +153,52 @@ def _parse_date(value):
 
 
 def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Parse date columns and validate that all values are either valid dates or NaN.
+    Raises ValueError with details of invalid values if any are found.
+    Empty strings are treated as valid (equivalent to NaN).
+    """
     result = df.copy()
     date_columns = [col for col in result.columns if "date" in col]
+    
+    invalid_values_by_column = {}
+    
     for date_col in date_columns:
-        result[date_col] = result[date_col].apply(_parse_date)
+        original_values = result[date_col].copy()
+        parsed_values = result[date_col].apply(_parse_date)
+        
+        # Find values that were not NaN/empty originally but became NaT after parsing
+        # Empty strings (after stripping) are considered valid, so we exclude them
+        is_empty_string = original_values.apply(
+            lambda x: isinstance(x, str) and not x.strip() if pd.notna(x) else False
+        )
+        invalid_mask = (
+            original_values.notna() 
+            & ~is_empty_string  # Exclude empty strings
+            & parsed_values.isna()  # But became NaT after parsing
+        )
+        
+        if invalid_mask.any():
+            invalid_values = original_values[invalid_mask].unique()
+            invalid_values_by_column[date_col] = invalid_values.tolist()
+        
+        result[date_col] = parsed_values
+    
+    # If any invalid values were found, raise an error with details
+    if invalid_values_by_column:
+        error_parts = ["Invalid date values found in the following columns:"]
+        for col, invalid_vals in invalid_values_by_column.items():
+            # Limit display to first 20 unique values per column to avoid huge error messages
+            display_vals = invalid_vals[:20]
+            more_count = len(invalid_vals) - 20
+            vals_str = ", ".join(repr(str(v)) for v in display_vals)
+            if more_count > 0:
+                vals_str += f" ... and {more_count} more"
+            error_parts.append(f"  - {col}: {vals_str}")
+        
+        error_parts.append("\nPlease fix these values in your data file. Dates must be parseable or empty/NaN.")
+        raise ValueError("\n".join(error_parts))
+    
     return result
 
 
