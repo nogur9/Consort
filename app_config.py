@@ -27,7 +27,7 @@ def _build_candidates(rel_paths: List[str]) -> List[Path]:
     return unique_candidates
 
 
-DATA_FILE =  "data/anon_master.xlsx"
+# DATA_FILE =  "data/anon_master.xlsx"
 
 
 GROUPS_FILE ="data/טבלת הקצאה רנדומלית לתנאי הניסוי והבקרה.xlsx"

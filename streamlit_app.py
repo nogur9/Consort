@@ -10,7 +10,6 @@ import streamlit as st
 
 from app_config import (
     CONSORT_GROUPS,
-    DATA_FILE,
     DEFAULT_ARMS,
     MAX_WAITING_DAYS_DEFAULT,
     METRIC_TABS,
@@ -55,24 +54,6 @@ def load_processed_data(data_bytes: Optional[bytes]) -> pd.DataFrame:
     return build_patient_dataset(data_source=data_bytes)
 
 
-def select_data_source() -> Optional[bytes]:
-    st.sidebar.subheader("Data source")
-    mode = st.sidebar.radio(
-        "Master workbook source",
-        ["Use default file", "Upload file"],
-        help="Choose whether to rely on the bundled master file or upload one.",
-    )
-    if mode == "Upload file":
-        uploaded = st.sidebar.file_uploader(
-            "Upload Excel file", type=["xlsx"], help="Upload a master workbook (.xlsx)."
-        )
-        if uploaded is not None:
-            return uploaded.getvalue()
-        st.sidebar.info("Upload a file to override the default dataset.")
-        return None
-
-    st.sidebar.caption(f"Using default data file: {DATA_FILE}")
-    return None
 
 
 # --------------------------------------------------------------------------- #
@@ -306,7 +287,9 @@ def render_raw_data_sections(df_filtered: pd.DataFrame, groups: List[str]):
 def main():
     st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>', unsafe_allow_html=True)
 
-    data_bytes = select_data_source()
+    data_bytes = st.sidebar.file_uploader(
+            "Upload Excel file", type=["xlsx"], help="Upload a master workbook (.xlsx)."
+        )
     try:
         with st.spinner("Loading and preprocessing data..."):
             df = load_processed_data(data_bytes)

@@ -3,7 +3,7 @@ aliases=  {
     'clinic_application_date': ['תאריך פנייה למרפאה'],
     'intake_date': ['תאריך אינטייק'],
     'group': ['הקצאה רנדומלית', 'סוג טיפול'],
-    'signing_date': ['תאריך חתימה']
+    'signing_date': ['תאריך חתימה'],
     'therapy_start_date': ['תאריך תחילת התערבות'],
     'therapy_end_date': ['שאלוני סוף התערבות (8 שבועות)', 'תאריך סיום התערבות']
 }
