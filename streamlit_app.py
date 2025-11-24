@@ -12,7 +12,6 @@ from app_config import (
     CONSORT_GROUPS,
     DEFAULT_ARMS,
     MAX_WAITING_DAYS_DEFAULT,
-
     METRIC_TABS,
 )
 from data_pipeline import build_patient_dataset
@@ -286,11 +285,26 @@ def render_raw_data_sections(df_filtered: pd.DataFrame, groups: List[str]):
 # Main app
 # --------------------------------------------------------------------------- #
 def main():
-    st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>', unsafe_allow_html=True)
 
-    data_bytes = st.sidebar.file_uploader(
-            "Upload Excel file", type=["xlsx"], help="Upload a master workbook (.xlsx)."
+    st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>',
+                unsafe_allow_html=True)
+
+    # centered uploader
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        data_bytes = st.file_uploader(
+            "Upload Excel file",
+            type=["xlsx"],
+            help="Upload a master workbook (.xlsx)."
         )
+
+    # stop the app until file uploaded
+    if data_bytes is None:
+        st.info("⬆️ Please upload an Excel file to continue.")
+        st.stop()
+
+    # --- only runs AFTER upload ---
+
     try:
         with st.spinner("Loading and preprocessing data..."):
             df = load_processed_data(data_bytes)

@@ -12,7 +12,6 @@ import pandas as pd
 from app_config import (
     ALIASES,
     CONSORT_GROUPS,
-    DATA_FILE,
     DATE_FORMATS,
     EXCLUDE_SHEETS,
     GROUPS_FILE,
