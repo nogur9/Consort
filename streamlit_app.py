@@ -12,6 +12,7 @@ from app_config import (
     CONSORT_GROUPS,
     DEFAULT_ARMS,
     MAX_WAITING_DAYS_DEFAULT,
+
     METRIC_TABS,
 )
 from data_pipeline import build_patient_dataset
