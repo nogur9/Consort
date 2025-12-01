@@ -13,7 +13,7 @@ from app_config import (
     ALIASES,
     CONSORT_GROUPS,
     DATE_FORMATS,
-    EXCLUDE_SHEETS,
+    CONSORT_RULES,
     GROUPS_FILE,
     GROUPS_RENAME,
     MAX_WAITING_DAYS_DEFAULT,
@@ -248,76 +248,7 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
 # Step 3 - CONSORT logic and derived metrics
 # --------------------------------------------------------------------------- #
 def _create_consort_rules(empty_tables: List[str]) -> Dict[str, Dict[str, List[str]]]:
-    rules = {
-        "N": {
-            "isin": [
-                "CAU",
-                "IPC-SSC",
-                "אי הסכמה למחקר",
-                "אי התאמה למחקר",
-                'אין שת"פ טיפולי',
-                "משתתפים פעילים",
-                "נשירה מחקרית",
-                "נשירה קלינית- לאחר ת. טיפול",
-                "סיימו טיפול",
-                "עלייה לרמה 2",
-                "פספוסי גיוסים",
-            ],
-            "not_in": [],
-        },
-        "Eligible": {
-            "isin": [
-                "CAU",
-                "IPC-SSC",
-                "אי הסכמה למחקר",
-                'אין שת"פ טיפולי',
-                "משתתפים פעילים",
-                "נשירה מחקרית",
-                "נשירה קלינית- לאחר ת. טיפול",
-                "סיימו טיפול",
-                "עלייה לרמה 2",
-            ],
-            "not_in": [],
-        },
-        "Randomized": {
-            "isin": [
-                "CAU",
-                "IPC-SSC",
-                'אין שת"פ טיפולי',
-                "משתתפים פעילים",
-                "נשירה מחקרית",
-                "נשירה קלינית- לאחר ת. טיפול",
-                "סיימו טיפול",
-                "עלייה לרמה 2",
-            ],
-            "not_in": [],
-        },
-        "Research Dropout": {
-            "isin": ["נשירה מחקרית"],
-            "not_in": [],
-        },
-        "Clinical Dropout": {
-            "isin": ["נשירה קלינית- לאחר ת. טיפול"],
-            "not_in": [],
-        },
-        "In Waiting List": {
-            "isin": ["משתתפים פעילים", "נשירה מחקרית"],
-            "not_in": ["CAU", "IPC-SSC"] + EXCLUDE_SHEETS,
-        },
-        "Not In Waiting List": {
-            "isin": ["משתתפים פעילים", "נשירה מחקרית"],
-            "not_in": ["CAU", "IPC-SSCx"] + EXCLUDE_SHEETS,
-        },
-        "Finished": {"isin": ["סיימו טיפול"],
-                     "not_in": []
-        },
-        "Active": {
-            "isin": ["משתתפים פעילים", "CAU", "IPC-SSC"],
-            "not_in": EXCLUDE_SHEETS,
-        },
-        "Not Cooperative": {'isin': ['אין שת"פ טיפולי'], "not_in": []},
-
-    }
+    rules = CONSORT_RULES.copy()
     for sheet in rules["N"]["isin"]:
         if sheet not in ["CAU", "IPC-SSC"]:
             rules[f"{sheet}__טבלת"] = {'isin': [sheet], "not_in": []}
@@ -359,6 +290,10 @@ def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd
 
     start = "first_contact_date"
     end = "therapy_starting_date"
+    enriched["did_started_therapy"] = enriched[end].notna().astype(int)
+
+    # End date = started therapy date if started, today if still waiting
+    enriched[end] = pd.to_datetime(enriched[end]).fillna(pd.Timestamp.today())
 
 
     enriched["waiting_duration"] = pd.to_datetime(enriched[end]) - pd.to_datetime(
@@ -367,7 +302,7 @@ def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd
     enriched["waiting_duration"] = enriched["waiting_duration"].dt.days
     enriched = enriched[~(enriched["waiting_duration"] > MAX_WAITING_DAYS_DEFAULT)]
 
-    enriched["did_started_therapy"] = pd.notna(enriched[end])
+
     if "suitable_for_pp" in enriched.columns:
         enriched["suitable_for_pp"] = enriched["suitable_for_pp"].apply(_to_bool)
 

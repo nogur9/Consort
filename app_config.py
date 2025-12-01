@@ -32,6 +32,80 @@ def _build_candidates(rel_paths: List[str]) -> List[Path]:
 
 GROUPS_FILE ="data/טבלת הקצאה רנדומלית לתנאי הניסוי והבקרה.xlsx"
 
+
+CONSORT_RULES = {
+    "N": {
+        "isin": [
+            "CAU",
+            "IPC-SSC",
+            "אי הסכמה למחקר",
+            "אי התאמה למחקר",
+            'אין שת"פ טיפולי',
+            "משתתפים פעילים",
+            "נשירה מחקרית",
+            "נשירה קלינית- לאחר ת. טיפול",
+            "סיימו טיפול",
+            "עלייה לרמה 2",
+            "פספוסי גיוסים",
+        ],
+        "not_in": [],
+    },
+    "Eligible": {
+        "isin": [
+            "CAU",
+            "IPC-SSC",
+            "אי הסכמה למחקר",
+            'אין שת"פ טיפולי',
+            "משתתפים פעילים",
+            "נשירה מחקרית",
+            "נשירה קלינית- לאחר ת. טיפול",
+            "סיימו טיפול",
+            "עלייה לרמה 2",
+        ],
+        "not_in": [],
+    },
+    "Randomized": {
+        "isin": [
+            "CAU",
+            "IPC-SSC",
+            'אין שת"פ טיפולי',
+            "משתתפים פעילים",
+            "נשירה מחקרית",
+            "נשירה קלינית- לאחר ת. טיפול",
+            "סיימו טיפול",
+            "עלייה לרמה 2",
+        ],
+        "not_in": [],
+    },
+    "Research Dropout": {
+        "isin": ["נשירה מחקרית"],
+        "not_in": [],
+    },
+    "Clinical Dropout": {
+        "isin": ["נשירה קלינית- לאחר ת. טיפול"],
+        "not_in": [],
+    },
+    "In Waiting List": {
+        "isin": ["משתתפים פעילים", "נשירה מחקרית"],
+        "not_in": ["CAU", "IPC-SSC"] + EXCLUDE_SHEETS,
+    },
+    "Not In Waiting List": {
+        "isin": ["משתתפים פעילים", "נשירה מחקרית"],
+        "not_in": ["CAU", "IPC-SSCx"] + EXCLUDE_SHEETS,
+    },
+    "Finished": {"isin": ["סיימו טיפול"],
+                 "not_in": []
+                 },
+    "Active": {
+        "isin": ["משתתפים פעילים", "CAU", "IPC-SSC"],
+        "not_in": EXCLUDE_SHEETS,
+    },
+    "Not Cooperative": {'isin': ['אין שת"פ טיפולי'], "not_in": []},
+
+}
+
+
+
 # Domain constants ------------------------------------------------------------
 DEFAULT_ARMS = ["CAU", "Stepped Care", "Missing Group", 'טיפול בקבוצת הורים ']
 CONSORT_GROUPS = [
