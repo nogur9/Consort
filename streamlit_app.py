@@ -171,6 +171,7 @@ def render_sidebar_metrics(df: pd.DataFrame, analysis_arms):
 
 
 def build_summary(df: pd.DataFrame, analysis_arms):
+    df = df.copy()
     summary = summarize_by_arm(df, analysis_arms)
     total_row = {
         "group": "Total",

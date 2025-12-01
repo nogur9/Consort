@@ -12,6 +12,8 @@ from lifelines import KaplanMeierFitter
 
 def summarize_by_arm(subset: pd.DataFrame, arms: List[str]) -> pd.DataFrame:
     """Aggregate key metrics per treatment arm."""
+    subset = subset.copy()
+    subset = subset[~(subset["waiting_duration"] < 0)]
     rows = []
     for arm in arms:
         arm_df = subset[subset["group"] == arm]
@@ -94,6 +96,7 @@ def plot_cumulative_incidence_with_risk(
     Use lifelines' automatic plotting to show cumulative incidence
     curves and an at-risk table for the provided arms.
     """
+    subset = subset.copy()
     surv_df = subset[["group", "waiting_duration", "did_started_therapy"]].copy()
     surv_df = surv_df.dropna(subset=["waiting_duration", "did_started_therapy"])
     surv_df = surv_df[~(surv_df["waiting_duration"] < 0)]
@@ -135,8 +138,10 @@ def plot_cumulative_incidence_with_risk(
 def plot_waiting_histogram(
     subset: pd.DataFrame, arms: List[str], bins: int = 30
 ) -> Optional[plt.Figure]:
+    data = data.copy()
     """Plot waiting-time histogram with hue per group."""
     data = subset[subset["waiting_duration"].notna() & subset["group"].isin(arms)]
+    data = data[~(data["waiting_duration"] < 0)]
     if data.empty:
         return None
 
