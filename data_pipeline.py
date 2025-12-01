@@ -38,7 +38,9 @@ def _locate_first_existing(candidates: Iterable[Path]) -> Path:
 
 def _resolve_data_source(data_source):
     if data_source is None:
-        raise ValueError
+        return "data/anon_master.xlsx"
+
+#        raise ValueError
     if isinstance(data_source, (bytes, bytearray)):
         return BytesIO(data_source)
     return data_source
@@ -81,6 +83,7 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
         sheet_df["suitable_for_pp"] = sheet_df["suitable_for_pp"].replace(SUITABLE_FOR_PP_RENAME)
 
     if "Clinic" in sheet_df.columns:
+        print("Clinic", f"{sheet_df['Clinic'].dtype = }", f"{sheet_name = }")
         sheet_df['Clinic'] = sheet_df['Clinic'].str.strip()
 
     sheet_columns = [col for col in columns if col in sheet_df.columns]
@@ -91,6 +94,7 @@ def _extract_patient_rows(xls: pd.ExcelFile, empty_tables: List[str]) -> pd.Data
     frames = []
     for sheet in xls.sheet_names:
         if sheet in empty_tables:
+            print(f"{empty_tables = }")
             continue
         frames.append(_normalize_sheet(xls.parse(sheet), sheet))
     return pd.concat(frames, ignore_index=True)
