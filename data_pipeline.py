@@ -87,10 +87,10 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
     return sheet_df[sheet_columns].reset_index(drop=True)
 
 
-def _extract_patient_rows(xls: pd.ExcelFile) -> pd.DataFrame:
+def _extract_patient_rows(xls: pd.ExcelFile, empty_tables: List[str]) -> pd.DataFrame:
     frames = []
     for sheet in xls.sheet_names:
-        if sheet in {"CAU", "IPC-SSC"}:
+        if sheet in empty_tables:
             continue
         frames.append(_normalize_sheet(xls.parse(sheet), sheet))
     return pd.concat(frames, ignore_index=True)
@@ -115,17 +115,24 @@ def _build_group_lookup(groups_xls: pd.ExcelFile) -> Dict[str, str]:
     return lookup
 
 
-def load_and_normalize_data(data_source=None) -> pd.DataFrame:
+def load_and_normalize_data(data_source=None) -> Tuple[pd.DataFrame, List[str]]:
     """Run preprocessing step 1: load workbooks, normalize columns, fill groups."""
     xls, groups_xls = _load_workbooks(data_source=data_source)
-    patient_df = _extract_patient_rows(xls)
+
+    empty_tables = []
+    for sheet in xls.sheet_names:
+        if xls.parse(sheet).shape[0] == 0:
+            empty_tables.append(sheet)
+
+
+    patient_df = _extract_patient_rows(xls, empty_tables)
     group_lookup = _build_group_lookup(groups_xls)
 
     patient_df["group"] = patient_df["group"].fillna(
         patient_df["clean_id"].map(group_lookup)
     )
     patient_df["group"] = patient_df["group"].replace(GROUPS_RENAME)
-    return patient_df
+    return patient_df, empty_tables
 
 
 # --------------------------------------------------------------------------- #
@@ -240,7 +247,7 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
 # --------------------------------------------------------------------------- #
 # Step 3 - CONSORT logic and derived metrics
 # --------------------------------------------------------------------------- #
-def _create_consort_rules() -> Dict[str, Dict[str, List[str]]]:
+def _create_consort_rules(empty_tables: List[str]) -> Dict[str, Dict[str, List[str]]]:
     rules = {
         "N": {
             "isin": [
@@ -313,20 +320,20 @@ def _create_consort_rules() -> Dict[str, Dict[str, List[str]]]:
     }
     for sheet in rules["N"]["isin"]:
         if sheet not in ["CAU", "IPC-SSC"]:
-            rules[f"{sheet}__טבלה"] = {'isin': [sheet], "not_in": []}
-            CONSORT_GROUPS.append(f"{sheet}__טבלה")
+            rules[f"{sheet}__טבלת"] = {'isin': [sheet], "not_in": []}
+            CONSORT_GROUPS.append(f"{sheet}__טבלת")
 
 
     for key, rule in rules.items():
         for bucket in ("isin", "not_in"):
             rules[key][bucket] = [
-                value for value in rule[bucket] if value not in {"CAU", "IPC-SSC"}
+                value for value in rule[bucket] if value not in empty_tables
             ]
     return rules
 
 
-def _apply_consort_rules(df: pd.DataFrame) -> pd.DataFrame:
-    rules = _create_consort_rules()
+def _apply_consort_rules(df: pd.DataFrame, empty_tables: List[str]) -> pd.DataFrame:
+    rules = _create_consort_rules(empty_tables)
     result = df.copy()
 
     def isin_group(row: pd.Series, rule: Dict[str, List[str]]) -> bool:
@@ -346,9 +353,9 @@ def _to_bool(value):
         return bool(value)
 
 
-def enrich_with_consort_metrics(df: pd.DataFrame) -> pd.DataFrame:
+def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd.DataFrame:
     """Run preprocessing step 3."""
-    enriched = _apply_consort_rules(df)
+    enriched = _apply_consort_rules(df, empty_tables)
 
     start = "first_contact_date"
     end = "therapy_starting_date"
@@ -373,7 +380,7 @@ def enrich_with_consort_metrics(df: pd.DataFrame) -> pd.DataFrame:
 # --------------------------------------------------------------------------- #
 def build_patient_dataset(data_source=None) -> pd.DataFrame:
     """Convenience function that runs all preprocessing stages."""
-    normalized = load_and_normalize_data(data_source=data_source)
+    normalized, empty_tables = load_and_normalize_data(data_source=data_source)
     aggregated = aggregate_patient_records(normalized)
-    return enrich_with_consort_metrics(aggregated)
+    return enrich_with_consort_metrics(aggregated, empty_tables)
 
