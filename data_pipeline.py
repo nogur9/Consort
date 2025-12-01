@@ -38,7 +38,7 @@ def _locate_first_existing(candidates: Iterable[Path]) -> Path:
 
 def _resolve_data_source(data_source):
     if data_source is None:
-        return DATA_FILE
+        raise ValueError
     if isinstance(data_source, (bytes, bytearray)):
         return BytesIO(data_source)
     return data_source
@@ -285,10 +285,6 @@ def _create_consort_rules() -> Dict[str, Dict[str, List[str]]]:
             ],
             "not_in": [],
         },
-        "Dropout": {
-            "isin": ["נשירה מחקרית", "נשירה קלינית- לאחר ת. טיפול"],
-            "not_in": [],
-        },
         "Research Dropout": {
             "isin": ["נשירה מחקרית"],
             "not_in": [],
@@ -298,8 +294,12 @@ def _create_consort_rules() -> Dict[str, Dict[str, List[str]]]:
             "not_in": [],
         },
         "In Waiting List": {
-            "isin": ["משתתפים פעילים"],
+            "isin": ["משתתפים פעילים", "נשירה מחקרית"],
             "not_in": ["CAU", "IPC-SSC"] + EXCLUDE_SHEETS,
+        },
+        "Not In Waiting List": {
+            "isin": ["משתתפים פעילים", "נשירה מחקרית"],
+            "not_in": ["CAU", "IPC-SSCx"] + EXCLUDE_SHEETS,
         },
         "Finished": {"isin": ["סיימו טיפול"],
                      "not_in": []

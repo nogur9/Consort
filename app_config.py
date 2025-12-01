@@ -38,7 +38,6 @@ CONSORT_GROUPS = [
     "N",
     "Eligible",
     "Randomized",
-    "Dropout",
     "Research Dropout",
     "Clinical Dropout",
     "In Waiting List",
@@ -121,7 +120,7 @@ PRIORITY_MAP = {
 }
 
 EXCLUDE_SHEETS = [
-    "נשירה מחקרית",
+#    "נשירה מחקרית",
     "נשירה קלינית- לאחר ת. טיפול",
     'אין שת"פ טיפולי',
 
