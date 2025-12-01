@@ -138,7 +138,7 @@ def plot_cumulative_incidence_with_risk(
 def plot_waiting_histogram(
     subset: pd.DataFrame, arms: List[str], bins: int = 30
 ) -> Optional[plt.Figure]:
-    data = data.copy()
+    subset = subset.copy()
     """Plot waiting-time histogram with hue per group."""
     data = subset[subset["waiting_duration"].notna() & subset["group"].isin(arms)]
     data = data[~(data["waiting_duration"] < 0)]
