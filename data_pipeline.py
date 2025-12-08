@@ -77,14 +77,14 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
     sheet_df["clean_id"] = sheet_df["raw_id"].astype(str).apply(_drop_trailing_s)
 
     if "group" in sheet_df.columns:
-        sheet_df["group"] = sheet_df["group"].replace(GROUPS_RENAME)
+        sheet_df["group"] = sheet_df["group"].astype(str).replace(GROUPS_RENAME)
 
     if "suitable_for_pp" in sheet_df.columns:
-        sheet_df["suitable_for_pp"] = sheet_df["suitable_for_pp"].replace(SUITABLE_FOR_PP_RENAME)
+        sheet_df["suitable_for_pp"] = sheet_df["suitable_for_pp"].astype(str).replace(SUITABLE_FOR_PP_RENAME)
 
     if "Clinic" in sheet_df.columns:
         print("Clinic", f"{sheet_df['Clinic'].dtype = }", f"{sheet_name = }")
-        sheet_df['Clinic'] = sheet_df['Clinic'].str.strip()
+        sheet_df['Clinic'] = sheet_df['Clinic'].astype(str).str.strip()
 
     sheet_columns = [col for col in columns if col in sheet_df.columns]
     return sheet_df[sheet_columns].reset_index(drop=True)
