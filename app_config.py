@@ -136,7 +136,7 @@ ALIASES = {
     "raw_id": [";", "קוד", "קוד מטופל", "קוד נבדק"],
     "clinic_application_date": ["תאריך פנייה למרפאה"],
     "intake_date": ["תאריך אינטייק"],
-    "group": ["הקצאה רנדומלית", "סוג טיפול"],
+    "group": ["הקצאה רנדומלית", "סוג טיפול", "הקצאה רנדומלית- למילוי אביה"],
     "signing_date": ["תאריך חתימה"],
     "therapy_start_date": ["תאריך תחילת התערבות"],
     "therapy_end_date": [
@@ -166,7 +166,8 @@ SUITABLE_FOR_PP_RENAME = {
     'מעקבים': np.nan,
     'ל.ר. ': np.nan,
     'ל.ר.': np.nan,
-    'ל.ר': np.nan
+    'ל.ר': np.nan,
+    "nan": None
 }
 
 GROUPS_RENAME = {
@@ -175,6 +176,7 @@ GROUPS_RENAME = {
     "ARM 1= Stepped care": "Stepped Care",
     "ARM 2=CAU": "CAU",
     "ARM 2= CAU": "CAU",
+    "nan": None
 }
 
 DATE_FORMATS = [

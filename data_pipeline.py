@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
+from xarray.util.generate_aggregations import skipna
 
 from app_config import (
     ALIASES,
@@ -79,13 +80,19 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
 
     if "group" in sheet_df.columns:
         sheet_df["group"] = sheet_df["group"].astype(str).replace(GROUPS_RENAME)
+    else:
+        sheet_df["group"] =  pd.NA
 
     if "suitable_for_pp" in sheet_df.columns:
         sheet_df["suitable_for_pp"] = sheet_df["suitable_for_pp"].astype(str).replace(SUITABLE_FOR_PP_RENAME)
+    else:
+        sheet_df["suitable_for_pp"] = pd.NA
 
     if "Clinic" in sheet_df.columns:
         print("Clinic", f"{sheet_df['Clinic'].dtype = }", f"{sheet_name = }")
         sheet_df['Clinic'] = sheet_df['Clinic'].astype(str).str.strip()
+    else:
+        sheet_df["Clinic"] =  pd.NA
 
     sheet_columns = [col for col in columns if col in sheet_df.columns]
     return sheet_df[sheet_columns].reset_index(drop=True)
@@ -217,7 +224,7 @@ def _aggregate_by_priority(df: pd.DataFrame) -> pd.DataFrame:
     temp = df.copy()
     temp["prio"] = temp["sheet"].map(PRIORITY_MAP)
     temp = temp.sort_values(["clean_id", "prio"])
-    result = temp.groupby("clean_id", as_index=False).first()
+    result = temp.groupby("clean_id", as_index=False).first(skipna=False)
     return result.drop(columns=["prio"])
 
 
@@ -244,7 +251,10 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
     )
     enriched["therapy_starting_date"] = enriched["therapy_start_date"]
 
+    enriched['Clinic'] = enriched.Clinic.replace({"nan": np.NaN})
 
+    if enriched.first_contact_date.isna().any():
+        raise ValueError(f"Missing Intake Date {enriched[enriched.first_contact_date.isna()].raw_id.to_list()}")
 
     return enriched
 

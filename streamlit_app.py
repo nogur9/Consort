@@ -103,7 +103,7 @@ def render_sidebar_filters(
     )
 
     if "Clinic" in df.columns:
-        clinic_options = sorted(df["Clinic"].dropna().unique().tolist())
+        clinic_options = sorted(df["Clinic"].dropna().unique().tolist()) + ["Missing Clinic"]
     else:
         clinic_options = []
 
@@ -133,6 +133,8 @@ def apply_filters(
 
     filtered = df[df["group"].isin(analysis_arms) | df["group"].isna()].copy()
     filtered["group"] = filtered["group"].fillna("Missing Group")
+    filtered = df[df["Clinic"].isin(clinic_selection) | df["Clinic"].isna()].copy()
+    filtered["Clinic"] = filtered["Clinic"].fillna("Missing Clinic")
 
     if clinic_selection and "Clinic" in filtered.columns:
         filtered = filtered[filtered["Clinic"].isin(clinic_selection)]
@@ -331,6 +333,7 @@ def main():
         group_selection,
         clinic_selection,
     ) = render_sidebar_filters(df)
+
     df_filtered, analysis_arms = apply_filters(
         df, selected_group, max_wait, intake_threshold, group_selection, clinic_selection
     )
