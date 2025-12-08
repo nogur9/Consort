@@ -321,6 +321,11 @@ def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd
     if "suitable_for_pp" in enriched.columns:
         enriched["suitable_for_pp"] = enriched["suitable_for_pp"].apply(_to_bool)
 
+
+
+    if (enriched["waiting_duration"] < 0).any():
+        raise ValueError(f"Negative Waiting Duration {enriched[enriched.waiting_duration < 0].raw_id.to_list()}")
+
     return enriched
 
 

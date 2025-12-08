@@ -133,7 +133,8 @@ def apply_filters(
 
     filtered = df[df["group"].isin(analysis_arms) | df["group"].isna()].copy()
     filtered["group"] = filtered["group"].fillna("Missing Group")
-    filtered = df[df["Clinic"].isin(clinic_selection) | df["Clinic"].isna()].copy()
+
+    filtered = filtered[filtered["Clinic"].isin(clinic_selection) | filtered["Clinic"].isna()].copy()
     filtered["Clinic"] = filtered["Clinic"].fillna("Missing Clinic")
 
     if clinic_selection and "Clinic" in filtered.columns:
@@ -149,7 +150,7 @@ def apply_filters(
         filtered = filtered[~(filtered["waiting_duration"] > max_wait)]
 
     if intake_threshold and "intake_date" in filtered.columns:
-        intake_ts = pd.to_datetime(filtered["intake_date"])
+        intake_ts = pd.to_datetime(filtered["first_contact_date"])
         filtered = filtered[intake_ts >= pd.to_datetime(intake_threshold)]
 
     if not analysis_arms:
