@@ -63,6 +63,7 @@ def _drop_trailing_s(value):
 
 
 def _build_rename_map() -> Dict[str, str]:
+    # meow
     return {alias: canonical for canonical, values in ALIASES.items() for alias in values}
 
 
