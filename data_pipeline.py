@@ -40,7 +40,6 @@ def _locate_first_existing(candidates: Iterable[Path]) -> Path:
 
 def _resolve_data_source(data_source):
     if data_source is None:
-        print("meow")
         raise ValueError
     if isinstance(data_source, (bytes, bytearray)):
         return BytesIO(data_source)
@@ -64,7 +63,6 @@ def _drop_trailing_s(value):
 
 
 def _build_rename_map() -> Dict[str, str]:
-    # meow
     return {alias: canonical for canonical, values in ALIASES.items() for alias in values}
 
 
