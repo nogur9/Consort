@@ -8,7 +8,6 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
-from xarray.util.generate_aggregations import skipna
 
 from app_config import (
     ALIASES,
