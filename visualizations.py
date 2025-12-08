@@ -13,7 +13,6 @@ from lifelines import KaplanMeierFitter
 def summarize_by_arm(subset: pd.DataFrame, arms: List[str]) -> pd.DataFrame:
     """Aggregate key metrics per treatment arm."""
     subset = subset.copy()
-    print("meow")
     subset = subset[~(subset["waiting_duration"] < 0)]
     rows = []
     for arm in arms:
