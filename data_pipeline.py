@@ -248,7 +248,7 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
     )
     enriched["therapy_starting_date"] = enriched["therapy_start_date"]
 
-    enriched['Clinic'] = enriched.Clinic.replace({"nan": np.NaN})
+    enriched['Clinic'] = enriched.Clinic.replace({"nan": np.nan})
 
     if enriched.first_contact_date.isna().any():
         raise ValueError(f"Missing Intake Date {enriched[enriched.first_contact_date.isna()].raw_id.to_list()}")
