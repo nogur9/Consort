@@ -5,7 +5,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
-
+import streamlit as st
 import numpy as np
 import pandas as pd
 
@@ -198,7 +198,7 @@ def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
             invalid_values_by_column[date_col] = invalid_values.tolist()
         
         result[date_col] = parsed_values
-    
+
     # If any invalid values were found, raise an error with details
     if invalid_values_by_column:
         error_parts = ["Invalid date values found in the following columns:"]
@@ -251,7 +251,9 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
     enriched['Clinic'] = enriched.Clinic.replace({"nan": np.nan})
 
     if enriched.first_contact_date.isna().any():
-        raise ValueError(f"Missing Intake Date {enriched[enriched.first_contact_date.isna()].raw_id.to_list()}")
+        msg = f"Missing Intake Date {enriched[enriched.first_contact_date.isna()].raw_id.to_list()}"
+        st.error(msg)
+        st.stop()
 
     return enriched
 
@@ -321,7 +323,9 @@ def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd
 
 
     if (enriched["waiting_duration"] < 0).any():
-        raise ValueError(f"Negative Waiting Duration {enriched[enriched.waiting_duration < 0].raw_id.to_list()}")
+        msg = f"Negative Waiting Duration {enriched[enriched.waiting_duration < 0].raw_id.to_list()}"
+        st.error(msg)
+        st.stop()
 
     return enriched
 
