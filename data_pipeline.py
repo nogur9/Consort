@@ -5,7 +5,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
-import streamlit as st
+
 import numpy as np
 import pandas as pd
 
@@ -251,9 +251,7 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
     enriched['Clinic'] = enriched.Clinic.replace({"nan": np.nan})
 
     if enriched.first_contact_date.isna().any():
-        msg = f"Missing Intake Date {enriched[enriched.first_contact_date.isna()].raw_id.to_list()}"
-        st.error(msg)
-        st.stop()
+        raise ValueError(f"Missing Intake Date {enriched[enriched.first_contact_date.isna()].raw_id.to_list()}")
 
     return enriched
 
@@ -323,9 +321,7 @@ def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd
 
 
     if (enriched["waiting_duration"] < 0).any():
-        msg = f"Negative Waiting Duration {enriched[enriched.waiting_duration < 0].raw_id.to_list()}"
-        st.error(msg)
-        st.stop()
+        raise ValueError(f"Negative Waiting Duration {enriched[enriched.waiting_duration < 0].raw_id.to_list()}")
 
     return enriched
 
