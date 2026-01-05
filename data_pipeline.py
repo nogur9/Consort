@@ -91,7 +91,6 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
         sheet_df["suitable_for_pp"] = pd.NA
 
     if "Clinic" in sheet_df.columns:
-        print(sheet_name)
         print("Clinic", f"{sheet_df['Clinic'].dtype = }", f"{sheet_name = }")
         sheet_df['Clinic'] = sheet_df['Clinic'].astype(str).str.strip()
     else:
