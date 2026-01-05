@@ -262,9 +262,9 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
 def _create_consort_rules(empty_tables: List[str]) -> Dict[str, Dict[str, List[str]]]:
     rules = CONSORT_RULES.copy()
     for sheet in rules["N"]["isin"]:
-        if sheet not in ["CAU", "IPC-SSC"]:
-            rules[f"{sheet}__טבלת"] = {'isin': [sheet], "not_in": []}
-            CONSORT_GROUPS.append(f"{sheet}__טבלת")
+        #if sheet not in ["CAU", "IPC-SSC"]:
+        rules[f"{sheet}__טבלת"] = {'isin': [sheet], "not_in": []}
+        CONSORT_GROUPS.append(f"{sheet}__טבלת")
 
 
     for key, rule in rules.items():
