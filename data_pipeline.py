@@ -81,7 +81,7 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
     elif sheet_name == "CAU":
         sheet_df["group"] = "CAU"
     elif sheet_name == "IPC-SSC":
-        sheet_df["group"] = "IPC-SSC"
+        sheet_df["group"] = "Stepped Care"
     else:
         sheet_df["group"] =  pd.NA
 
