@@ -73,10 +73,15 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
     sheet_df = sheet_df.copy()
     sheet_df["sheet"] = sheet_name
     sheet_df.rename(columns=rename_map, inplace=True, errors="ignore")
+    assert sheet_df["raw_id"].notna().all(), f"missing id in {sheet_name = }"
     sheet_df["clean_id"] = sheet_df["raw_id"].astype(str).apply(_drop_trailing_s)
 
     if "group" in sheet_df.columns:
         sheet_df["group"] = sheet_df["group"].astype(str).replace(GROUPS_RENAME)
+    elif sheet_df == "CAU":
+        sheet_df["group"] = "CAU"
+    elif sheet_df == "IPC-SSC":
+        sheet_df["group"] = "IPC-SSC"
     else:
         sheet_df["group"] =  pd.NA
 
@@ -220,7 +225,20 @@ def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
 def _aggregate_by_priority(df: pd.DataFrame) -> pd.DataFrame:
     temp = df.copy()
     temp["prio"] = temp["sheet"].map(PRIORITY_MAP)
+
+    s = (
+        df
+        .dropna(subset=["group"])
+        .groupby('clean_id')["group"]
+        .nunique()
+    )
+    bad_ids = s[s != 1]
+    assert bad_ids.empty, f"multiple groups found for ids: {bad_ids.index.tolist()}"
+
+
     temp = temp.sort_values(["clean_id", "prio"])
+
+
     result = temp.groupby("clean_id", as_index=False).first(skipna=False)
     return result.drop(columns=["prio"])
 
