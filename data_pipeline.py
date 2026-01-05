@@ -78,9 +78,9 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
 
     if "group" in sheet_df.columns:
         sheet_df["group"] = sheet_df["group"].astype(str).replace(GROUPS_RENAME)
-    elif sheet_df == "CAU":
+    elif sheet_name == "CAU":
         sheet_df["group"] = "CAU"
-    elif sheet_df == "IPC-SSC":
+    elif sheet_name == "IPC-SSC":
         sheet_df["group"] = "IPC-SSC"
     else:
         sheet_df["group"] =  pd.NA
