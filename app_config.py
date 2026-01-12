@@ -180,11 +180,11 @@ GROUPS_RENAME = {
 }
 
 DATE_FORMATS = [
-    "%d/%m/%Y",
-    "%d.%m.%Y",
-    "%d-%m-%Y",
-    "%d-%m-%Y %H:%M:%S",
-    "%d\%m\%Y",
+    r"%d/%m/%Y",
+    r"%d.%m.%Y",
+    r"%d-%m-%Y",
+    r"%d-%m-%Y %H:%M:%S",
+    r"%d\%m\%Y",
 ]
 
 PRIORITY_MAP = {
