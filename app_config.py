@@ -167,7 +167,9 @@ SUITABLE_FOR_PP_RENAME = {
     'ל.ר. ': np.nan,
     'ל.ר.': np.nan,
     'ל.ר': np.nan,
-    "nan": None
+    "nan": None,
+    'כן': 1,
+    'לא': 0,
 }
 
 GROUPS_RENAME = {
