@@ -180,12 +180,12 @@ def build_summary(df: pd.DataFrame, analysis_arms):
         "group": "Total",
         "count": len(df),
         "waiting_duration_mean": df["waiting_duration"].mean(skipna=True),
-        "did_started_therapy": df["did_started_therapy"].sum(skipna=True),
-        "suitable_for_pp": df["suitable_for_pp"].sum(skipna=True),
+        "did_started_therapy": df["did_started_therapy"].astype(float).sum(skipna=True),
+        "suitable_for_pp": df["suitable_for_pp"].astype(float).sum(skipna=True),
 
         "waiting_duration_median": df["waiting_duration"].median(skipna=True),
-        "did_started_therapy_mean": df["did_started_therapy"].mean(skipna=True),
-        "suitable_for_pp_mean": df["suitable_for_pp"].mean(skipna=True),
+        "did_started_therapy_mean": df["did_started_therapy"].astype(float).mean(skipna=True),
+        "suitable_for_pp_mean": df["suitable_for_pp"].astype(float).mean(skipna=True),
         "waiting_duration_std": df["waiting_duration"].std(skipna=True),
 
     }
@@ -288,25 +288,26 @@ def render_raw_data_sections(df_filtered: pd.DataFrame, groups: List[str]):
 # --------------------------------------------------------------------------- #
 # Main app
 # --------------------------------------------------------------------------- #
-def main():
+def main(debug=False):
+    if not debug:
+        st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>',
+                    unsafe_allow_html=True)
 
-    st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>',
-                unsafe_allow_html=True)
+        # centered uploader
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            data_bytes = st.file_uploader(
+                "Upload Excel file",
+                type=["xlsx"],
+                help="Upload a master workbook (.xlsx)."
+            )
 
-    # centered uploader
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        data_bytes = st.file_uploader(
-            "Upload Excel file",
-            type=["xlsx"],
-            help="Upload a master workbook (.xlsx)."
-        )
-
-    # stop the app until file uploaded
-    if data_bytes is None:
-        st.info("⬆️ Please upload an Excel file to continue.")
-        st.stop()
-
+        # stop the app until file uploaded
+        if data_bytes is None:
+            st.info("⬆️ Please upload an Excel file to continue.")
+            st.stop()
+    else:
+        data_bytes = f"��עותק של test data�.xlsx"
     # --- only runs AFTER upload ---
 
     try:
@@ -360,5 +361,5 @@ def main():
     render_download_button(summary_display, selected_group)
 
 if __name__ == "__main__":
-    main()
+    main(debug=True)
 

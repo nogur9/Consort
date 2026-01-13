@@ -169,8 +169,9 @@ SUITABLE_FOR_PP_RENAME = {
     'ל.ר.': np.nan,
     'ל.ר': np.nan,
     "nan": None,
-    'כן': 1,
+    'כן':1,
     'לא': 0,
+
 }
 
 GROUPS_RENAME = {
@@ -232,7 +233,7 @@ METRIC_TABS = [
     },
     {
         "title": "Suitable for PP",
-        "column": "suitable_for_pp",
+        "column": "suitable_for_pp_mean",
         "label": "Proportion Suitable for PP",
         "description": "Share of patients suitable for PP treatment.",
     },

@@ -87,11 +87,12 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
 
     if "suitable_for_pp" in sheet_df.columns:
         sheet_df["suitable_for_pp"] = sheet_df["suitable_for_pp"].astype(str).replace(SUITABLE_FOR_PP_RENAME)
+        print(f"_normalize_sheet {sheet_name = } meow {sheet_df.suitable_for_pp.unique() = }")
     else:
         sheet_df["suitable_for_pp"] = pd.NA
 
     if "Clinic" in sheet_df.columns:
-        print("Clinic", f"{sheet_df['Clinic'].dtype = }", f"{sheet_name = }")
+        #print("Clinic", f"{sheet_df['Clinic'].dtype = }", f"{sheet_name = }")
         sheet_df['Clinic'] = sheet_df['Clinic'].astype(str).str.strip()
     else:
         sheet_df["Clinic"] =  pd.NA
@@ -104,7 +105,7 @@ def _extract_patient_rows(xls: pd.ExcelFile, empty_tables: List[str]) -> pd.Data
     frames = []
     for sheet in xls.sheet_names:
         if sheet in empty_tables:
-            print(f"{empty_tables = }")
+            # print(f"{empty_tables = }")
             continue
         frames.append(_normalize_sheet(xls.parse(sheet), sheet))
     return pd.concat(frames, ignore_index=True)

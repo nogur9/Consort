@@ -44,13 +44,13 @@ def summarize_by_arm(subset: pd.DataFrame, arms: List[str]) -> pd.DataFrame:
                 "group": arm,
                 "count": int(count_sum) if not pd.isna(count_sum) else 0,
                 "waiting_duration_mean": arm_df["waiting_duration"].mean(skipna=True),
-                "did_started_therapy": arm_df["did_started_therapy"].sum(skipna=True),
-                "suitable_for_pp": arm_df["suitable_for_pp"].sum(skipna=True),
+                "did_started_therapy": arm_df["did_started_therapy"].astype(float).sum(skipna=True),
+                "suitable_for_pp": arm_df["suitable_for_pp"].astype(float).sum(skipna=True),
 
                 "waiting_duration_std": arm_df["waiting_duration"].std(skipna=True),
                 "waiting_duration_median": arm_df["waiting_duration"].median(skipna=True),
-                "did_started_therapy_mean": arm_df["did_started_therapy"].mean(skipna=True),
-                "suitable_for_pp_mean": arm_df["suitable_for_pp"].mean(skipna=True),
+                "did_started_therapy_mean": arm_df["did_started_therapy"].astype(float).mean(skipna=True),
+                "suitable_for_pp_mean": arm_df["suitable_for_pp"].astype(float).mean(skipna=True),
             }
         )
 
@@ -71,7 +71,7 @@ def plot_metric_bar(
     if show_total and total_value is not None:
         total_row = pd.DataFrame([{"group": "Total", metric_col: total_value}])
         plot_df = pd.concat([plot_df, total_row], ignore_index=True)
-
+    # print(f"plot_metric_bar {metric_col = } meow meow {plot_df[metric_col].unique()}")
     plot_df.plot(
         x="group",
         y=metric_col,
