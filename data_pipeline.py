@@ -81,7 +81,7 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
         # Add 2 to account for 0-based index and Excel header row (Excel rows start at 1, header is row 1)
         excel_rows = [idx + 2 for idx in missing_rows]
         raise ValueError(
-            f"Missing ID in sheet '{sheet_name}' at rows: {excel_rows}"
+            f"In the table '{sheet_name}', there are missing IDs in rows: {excel_rows}"
         )
     
     sheet_df["clean_id"] = sheet_df["raw_id"].astype(str).apply(_drop_trailing_s)
@@ -90,12 +90,12 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
     duplicates = sheet_df[sheet_df["clean_id"].duplicated(keep=False)]
     if not duplicates.empty:
         duplicate_ids = duplicates["clean_id"].unique()
-        error_parts = [f"Non-unique clean_id found in sheet '{sheet_name}':"]
+        error_parts = [f"In the table '{sheet_name}', there are multiple rows with the same ID value:"]
         for dup_id in duplicate_ids:
             dup_rows = sheet_df[sheet_df["clean_id"] == dup_id].index.tolist()
             excel_rows = [idx + 2 for idx in dup_rows]
             error_parts.append(
-                f"  - clean_id '{dup_id}' appears at rows: {excel_rows}"
+                f"  The ID '{dup_id}' appears in rows: {excel_rows}"
             )
         raise ValueError("\n".join(error_parts))
 
@@ -238,7 +238,7 @@ def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     # If any invalid values were found, raise an error with details
     if invalid_values_by_column:
-        error_parts = ["Invalid date/time values found in the following columns:"]
+        error_parts = ["There are invalid date values that cannot be read in the following columns:"]
         for col, invalid_vals in invalid_values_by_column.items():
             # Limit display to first 20 unique values per column to avoid huge error messages
             display_vals = invalid_vals[:20]
@@ -255,11 +255,10 @@ def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
                 excel_rows_str = excel_rows_str[:-1] + f", ... ({len(row_info['excel_rows'])} total rows)]"
             
             error_parts.append(
-                f"  - {col}: {vals_str}\n"
-                f"    Rows (Excel): {excel_rows_str}"
+                f"  In column '{col}': invalid values {vals_str} appear in rows: {excel_rows_str}"
             )
         
-        error_parts.append("\nPlease fix these values in your data file. Dates/times must be parseable or empty/NaN.")
+        error_parts.append("\nPlease fix these values in your data file. Dates should be in a standard format (like YYYY-MM-DD or DD/MM/YYYY) or left empty.")
         raise ValueError("\n".join(error_parts))
     
     return result
@@ -277,14 +276,14 @@ def _aggregate_by_priority(df: pd.DataFrame) -> pd.DataFrame:
     )
     bad_ids = s[s != 1]
     if not bad_ids.empty:
-        error_parts = ["Multiple groups found for the following IDs:"]
+        error_parts = ["The following IDs appear in multiple tables with different group assignments:"]
         for bad_id in bad_ids.index:
             # Find all rows with this ID and their groups/sheets
             id_rows = df[df["clean_id"] == bad_id]
             groups_info = id_rows[["sheet", "group"]].drop_duplicates()
             group_list = groups_info.groupby("group")["sheet"].apply(list).to_dict()
-            group_str = ", ".join(f"{grp} (sheets: {sheets})" for grp, sheets in group_list.items())
-            error_parts.append(f"  - clean_id '{bad_id}': {group_str}")
+            group_str = ", ".join(f"group '{grp}' in tables {sheets}" for grp, sheets in group_list.items())
+            error_parts.append(f"  The ID '{bad_id}' appears with {group_str}")
         raise ValueError("\n".join(error_parts))
 
 
@@ -326,9 +325,9 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
         row_numbers = [idx + 1 for idx in missing_rows.index.tolist()]
         raw_ids = missing_rows.raw_id.to_list()
         error_msg = (
-            f"Missing Intake Date for {len(raw_ids)} record(s):\n"
-            f"  IDs: {raw_ids}\n"
-            f"  Row numbers: {row_numbers}"
+            f"There are {len(raw_ids)} records missing an intake date.\n"
+            f"These records are in rows: {row_numbers}\n"
+            f"Record IDs: {raw_ids}"
         )
         raise ValueError(error_msg)
 
@@ -406,10 +405,10 @@ def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd
         raw_ids = negative_rows.raw_id.to_list()
         durations = negative_rows.waiting_duration.tolist()
         error_msg = (
-            f"Negative Waiting Duration found for {len(raw_ids)} record(s):\n"
-            f"  IDs: {raw_ids}\n"
-            f"  Row numbers: {row_numbers}\n"
-            f"  Durations (days): {durations}"
+            f"There are {len(raw_ids)} records where the therapy start date is before the intake date.\n"
+            f"These records are in rows: {row_numbers}\n"
+            f"Record IDs: {raw_ids}\n"
+            f"Waiting durations (days): {durations}"
         )
         raise ValueError(error_msg)
 
