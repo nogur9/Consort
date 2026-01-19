@@ -73,8 +73,31 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
     sheet_df = sheet_df.copy()
     sheet_df["sheet"] = sheet_name
     sheet_df.rename(columns=rename_map, inplace=True, errors="ignore")
-    assert sheet_df["raw_id"].notna().all(), f"missing id in {sheet_name = }"
+    
+    # Check for missing IDs and display row numbers
+    missing_id_mask = sheet_df["raw_id"].isna()
+    if missing_id_mask.any():
+        missing_rows = sheet_df[missing_id_mask].index.tolist()
+        # Add 2 to account for 0-based index and Excel header row (Excel rows start at 1, header is row 1)
+        excel_rows = [idx + 2 for idx in missing_rows]
+        raise ValueError(
+            f"Missing ID in sheet '{sheet_name}' at rows: {excel_rows}"
+        )
+    
     sheet_df["clean_id"] = sheet_df["raw_id"].astype(str).apply(_drop_trailing_s)
+    
+    # Check for non-unique clean_id within the same sheet
+    duplicates = sheet_df[sheet_df["clean_id"].duplicated(keep=False)]
+    if not duplicates.empty:
+        duplicate_ids = duplicates["clean_id"].unique()
+        error_parts = [f"Non-unique clean_id found in sheet '{sheet_name}':"]
+        for dup_id in duplicate_ids:
+            dup_rows = sheet_df[sheet_df["clean_id"] == dup_id].index.tolist()
+            excel_rows = [idx + 2 for idx in dup_rows]
+            error_parts.append(
+                f"  - clean_id '{dup_id}' appears at rows: {excel_rows}"
+            )
+        raise ValueError("\n".join(error_parts))
 
     if "group" in sheet_df.columns:
         sheet_df["group"] = sheet_df["group"].astype(str).replace(GROUPS_RENAME)
@@ -183,6 +206,7 @@ def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
     date_columns = [col for col in result.columns if "date" in col]
     
     invalid_values_by_column = {}
+    invalid_rows_by_column = {}
     
     for date_col in date_columns:
         original_values = result[date_col].copy()
@@ -200,14 +224,21 @@ def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
         )
         
         if invalid_mask.any():
+            invalid_rows = result[invalid_mask].index.tolist()
+            # Add 2 to account for 0-based index and Excel header row (Excel rows start at 1, header is row 1)
+            excel_rows = [idx + 2 for idx in invalid_rows]
             invalid_values = original_values[invalid_mask].unique()
             invalid_values_by_column[date_col] = invalid_values.tolist()
+            invalid_rows_by_column[date_col] = {
+                'excel_rows': excel_rows,
+                'df_indices': invalid_rows
+            }
         
         result[date_col] = parsed_values
 
     # If any invalid values were found, raise an error with details
     if invalid_values_by_column:
-        error_parts = ["Invalid date values found in the following columns:"]
+        error_parts = ["Invalid date/time values found in the following columns:"]
         for col, invalid_vals in invalid_values_by_column.items():
             # Limit display to first 20 unique values per column to avoid huge error messages
             display_vals = invalid_vals[:20]
@@ -215,9 +246,20 @@ def _parse_date_columns(df: pd.DataFrame) -> pd.DataFrame:
             vals_str = ", ".join(repr(str(v)) for v in display_vals)
             if more_count > 0:
                 vals_str += f" ... and {more_count} more"
-            error_parts.append(f"  - {col}: {vals_str}")
+            
+            # Add row information
+            row_info = invalid_rows_by_column[col]
+            display_rows = row_info['excel_rows'][:20]
+            excel_rows_str = str(display_rows)
+            if len(row_info['excel_rows']) > 20:
+                excel_rows_str = excel_rows_str[:-1] + f", ... ({len(row_info['excel_rows'])} total rows)]"
+            
+            error_parts.append(
+                f"  - {col}: {vals_str}\n"
+                f"    Rows (Excel): {excel_rows_str}"
+            )
         
-        error_parts.append("\nPlease fix these values in your data file. Dates must be parseable or empty/NaN.")
+        error_parts.append("\nPlease fix these values in your data file. Dates/times must be parseable or empty/NaN.")
         raise ValueError("\n".join(error_parts))
     
     return result
@@ -234,7 +276,16 @@ def _aggregate_by_priority(df: pd.DataFrame) -> pd.DataFrame:
         .nunique()
     )
     bad_ids = s[s != 1]
-    assert bad_ids.empty, f"multiple groups found for ids: {bad_ids.index.tolist()}"
+    if not bad_ids.empty:
+        error_parts = ["Multiple groups found for the following IDs:"]
+        for bad_id in bad_ids.index:
+            # Find all rows with this ID and their groups/sheets
+            id_rows = df[df["clean_id"] == bad_id]
+            groups_info = id_rows[["sheet", "group"]].drop_duplicates()
+            group_list = groups_info.groupby("group")["sheet"].apply(list).to_dict()
+            group_str = ", ".join(f"{grp} (sheets: {sheets})" for grp, sheets in group_list.items())
+            error_parts.append(f"  - clean_id '{bad_id}': {group_str}")
+        raise ValueError("\n".join(error_parts))
 
 
     temp = temp.sort_values(["clean_id", "prio"])
@@ -270,7 +321,16 @@ def aggregate_patient_records(df: pd.DataFrame) -> pd.DataFrame:
     enriched['Clinic'] = enriched.Clinic.replace({"nan": np.nan})
 
     if enriched.first_contact_date.isna().any():
-        raise ValueError(f"Missing Intake Date {enriched[enriched.first_contact_date.isna()].raw_id.to_list()}")
+        missing_mask = enriched.first_contact_date.isna()
+        missing_rows = enriched[missing_mask]
+        row_numbers = [idx + 1 for idx in missing_rows.index.tolist()]
+        raw_ids = missing_rows.raw_id.to_list()
+        error_msg = (
+            f"Missing Intake Date for {len(raw_ids)} record(s):\n"
+            f"  IDs: {raw_ids}\n"
+            f"  Row numbers: {row_numbers}"
+        )
+        raise ValueError(error_msg)
 
     return enriched
 
@@ -340,7 +400,18 @@ def enrich_with_consort_metrics(df: pd.DataFrame, empty_tables: List[str]) -> pd
 
 
     if (enriched["waiting_duration"] < 0).any():
-        raise ValueError(f"Negative Waiting Duration {enriched[enriched.waiting_duration < 0].raw_id.to_list()}")
+        negative_mask = enriched["waiting_duration"] < 0
+        negative_rows = enriched[negative_mask]
+        row_numbers = [idx + 1 for idx in negative_rows.index.tolist()]
+        raw_ids = negative_rows.raw_id.to_list()
+        durations = negative_rows.waiting_duration.tolist()
+        error_msg = (
+            f"Negative Waiting Duration found for {len(raw_ids)} record(s):\n"
+            f"  IDs: {raw_ids}\n"
+            f"  Row numbers: {row_numbers}\n"
+            f"  Durations (days): {durations}"
+        )
+        raise ValueError(error_msg)
 
     return enriched
 
