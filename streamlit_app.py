@@ -361,5 +361,5 @@ def main(debug=False):
     render_download_button(summary_display, selected_group)
 
 if __name__ == "__main__":
-    main(debug=True)
+    main(debug=False)
 
