@@ -285,6 +285,7 @@ def render_raw_data_sections(df_filtered: pd.DataFrame, groups: List[str]):
         st.dataframe(group_df, use_container_width=True)
 
 
+
 # --------------------------------------------------------------------------- #
 # Main app
 # --------------------------------------------------------------------------- #
