@@ -314,18 +314,16 @@ def main(debug=False):
         with st.spinner("Loading and preprocessing data..."):
             df = load_processed_data(data_bytes)
     except ValueError as e:
-        # Handle date validation errors
-        if "Invalid date values" in str(e):
-            st.error("❌ **Date Validation Error**")
-            st.error(str(e))
-            st.info("💡 **Tip**: Please fix the invalid date values in your Excel file and try again. Dates should be in a standard format (e.g., YYYY-MM-DD, DD/MM/YYYY) or left empty.")
-            return
-        else:
-            # Re-raise other ValueErrors
-            raise
+        # Always show a friendly, non-technical error to the user
+        st.error("❌ There is a problem with the data in your Excel file.")
+        st.error(str(e))
+        st.info("Please fix the rows mentioned above in your Excel file and upload it again.")
+        return
     except Exception as e:
-        st.error(f"❌ **Error loading data**: {str(e)}")
+        st.error("❌ Something went wrong while loading the file.")
         st.info("Please check your data file and try again.")
+        # Still log the technical details to the Streamlit console for debugging
+        st.write(str(e))
         return
 
     (
