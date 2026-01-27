@@ -21,6 +21,7 @@ from visualizations import (
     plot_waiting_histogram,
     summarize_by_arm,
 )
+import traceback
 
 
 st.set_page_config(page_title="CONSORT Analysis Dashboard", page_icon="📊", layout="wide")
@@ -308,7 +309,7 @@ def main(debug=False):
             st.info("⬆️ Please upload an Excel file to continue.")
             st.stop()
     else:
-        data_bytes = f"��עותק של test data�.xlsx"
+        data_bytes = f"רק קודי משתמש- בדיקה לנגה (1).xlsx"
     # --- only runs AFTER upload ---
 
     try:
@@ -319,12 +320,14 @@ def main(debug=False):
         st.error("❌ There is a problem with the data in your Excel file.")
         st.error(str(e))
         st.info("Please fix the rows mentioned above in your Excel file and upload it again.")
+        st.write(str(traceback.format_exc()))
         return
     except Exception as e:
         st.error("❌ Something went wrong while loading the file.")
         st.info("Please check your data file and try again.")
         # Still log the technical details to the Streamlit console for debugging
         st.write(str(e))
+        st.write(str(traceback.format_exc()))
         return
 
     (
