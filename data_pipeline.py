@@ -358,9 +358,10 @@ def _apply_consort_rules(df: pd.DataFrame, empty_tables: List[str]) -> pd.DataFr
     result = df.copy()
 
     def isin_group(row: pd.Series, rule: Dict[str, List[str]]) -> bool:
-        in_positive = any(bool(row[sheet]) for sheet in rule["isin"])
-        in_negative = any(bool(row[sheet]) for sheet in rule["not_in"])
-        return in_positive and not in_negative
+        return True
+        # in_positive = any(bool(row[sheet]) for sheet in rule["isin"])
+        # in_negative = any(bool(row[sheet]) for sheet in rule["not_in"])
+        # return in_positive and not in_negative
 
     for group_name in CONSORT_GROUPS:
         result[group_name] = result.apply(isin_group, axis=1, args=(rules[group_name],))
