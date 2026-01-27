@@ -290,7 +290,7 @@ def render_raw_data_sections(df_filtered: pd.DataFrame, groups: List[str]):
 # --------------------------------------------------------------------------- #
 # Main app
 # --------------------------------------------------------------------------- #
-def main(debug=False):
+def main(debug=False, trace_errors=False):
     if not debug:
         st.markdown('<h1 class="main-header">📊 CONSORT Analysis Dashboard</h1>',
                     unsafe_allow_html=True)
@@ -320,14 +320,16 @@ def main(debug=False):
         st.error("❌ There is a problem with the data in your Excel file.")
         st.error(str(e))
         st.info("Please fix the rows mentioned above in your Excel file and upload it again.")
-        st.write(str(traceback.format_exc()))
+        if trace_errors:
+            st.write(str(traceback.format_exc()))
         return
     except Exception as e:
         st.error("❌ Something went wrong while loading the file.")
         st.info("Please check your data file and try again.")
         # Still log the technical details to the Streamlit console for debugging
         st.write(str(e))
-        st.write(str(traceback.format_exc()))
+        if trace_errors:
+            st.write(str(traceback.format_exc()))
         return
 
     (
@@ -363,5 +365,5 @@ def main(debug=False):
     render_download_button(summary_display, selected_group)
 
 if __name__ == "__main__":
-    main(debug=False)
+    main(debug=False, trace_errors=False)
 

@@ -84,7 +84,6 @@ def _normalize_sheet(sheet_df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
         raise ValueError(
             f"In the table '{sheet_name}', there are missing IDs in rows: {excel_rows}"
         )
-    
     sheet_df["clean_id"] = sheet_df["raw_id"].astype(str).apply(_drop_trailing_s)
     
     # Check for non-unique clean_id within the same sheet
@@ -132,8 +131,14 @@ def _extract_patient_rows(xls: pd.ExcelFile, empty_tables: List[str]) -> pd.Data
             # print(f"{empty_tables = }")
             continue
         sheet_df = _normalize_sheet(xls.parse(sheet), sheet)
+        cols = list(sheet_df.columns)
+        dup_cols = {x for x in cols if cols.count(x) > 1}
+        if dup_cols:
+            raise ValueError(
+                f"In the table '{sheet}', there are multiple {dup_cols} columns"
+            )
         frames.append(sheet_df)
-        st.write(f"{str(sheet) = }\n{sheet_df.columns}")
+
     return pd.concat(frames, ignore_index=True)
 
 
@@ -361,10 +366,9 @@ def _apply_consort_rules(df: pd.DataFrame, empty_tables: List[str]) -> pd.DataFr
     result = df.copy()
 
     def isin_group(row: pd.Series, rule: Dict[str, List[str]]) -> bool:
-        return True
-        # in_positive = any(bool(row[sheet]) for sheet in rule["isin"])
-        # in_negative = any(bool(row[sheet]) for sheet in rule["not_in"])
-        # return in_positive and not in_negative
+        in_positive = any(bool(row[sheet]) for sheet in rule["isin"])
+        in_negative = any(bool(row[sheet]) for sheet in rule["not_in"])
+        return in_positive and not in_negative
 
     for group_name in CONSORT_GROUPS:
         result[group_name] = result.apply(isin_group, axis=1, args=(rules[group_name],))

@@ -140,7 +140,6 @@ ALIASES = {
     "signing_date": ["תאריך חתימה"],
     "therapy_start_date": ["תאריך תחילת התערבות"],
     "therapy_end_date": [
-        "שאלוני סוף התערבות (8 שבועות)",
         "תאריך סיום התערבות",
     ],
     "suitable_for_pp": [
