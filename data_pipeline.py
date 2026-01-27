@@ -5,6 +5,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
+import streamlit as st
 
 import numpy as np
 import pandas as pd
@@ -130,7 +131,9 @@ def _extract_patient_rows(xls: pd.ExcelFile, empty_tables: List[str]) -> pd.Data
         if sheet in empty_tables:
             # print(f"{empty_tables = }")
             continue
-        frames.append(_normalize_sheet(xls.parse(sheet), sheet))
+        sheet_df = _normalize_sheet(xls.parse(sheet), sheet)
+        frames.append(sheet_df)
+        st.write(f"{str(sheet) = }\n{sheet_df.columns}")
     return pd.concat(frames, ignore_index=True)
 
 
