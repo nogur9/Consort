@@ -50,9 +50,31 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 # Data access
 # --------------------------------------------------------------------------- #
 @st.cache_data
-def load_processed_data(data_bytes: Optional[bytes]) -> pd.DataFrame:
+def load_processed_data(uploaded_file) -> pd.DataFrame:
     """Load and cache the fully processed dataset."""
-    return build_patient_dataset(data_source=data_bytes)
+    if uploaded_file is None:
+        raise ValueError("No file was uploaded.")
+
+    file_name = getattr(uploaded_file, "name", "") or ""
+    extension = file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
+
+    if extension == "csv":
+        csv_encodings = ("utf-8", "utf-8-sig", "cp1255", "iso-8859-8", "cp1252")
+        last_decode_error = None
+        for encoding in csv_encodings:
+            try:
+                uploaded_file.seek(0)
+                return pd.read_csv(uploaded_file, encoding=encoding)
+            except UnicodeDecodeError as exc:
+                last_decode_error = exc
+                continue
+
+        raise ValueError(
+            "Could not decode the CSV file. Please save it as UTF-8 (or UTF-8 with BOM) and upload again."
+        ) from last_decode_error
+
+    uploaded_file.seek(0)
+    return build_patient_dataset(data_source=uploaded_file)
 
 
 
@@ -298,28 +320,28 @@ def main(debug=False, trace_errors=False):
         # centered uploader
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            data_bytes = st.file_uploader(
-                "Upload Excel file",
-                type=["xlsx"],
-                help="Upload a master workbook (.xlsx)."
+            uploaded_file = st.file_uploader(
+                "Upload data file",
+                type=["xlsx", "csv"],
+                help="Upload either a master workbook (.xlsx) or a CSV file (.csv)."
             )
 
         # stop the app until file uploaded
-        if data_bytes is None:
-            st.info("⬆️ Please upload an Excel file to continue.")
+        if uploaded_file is None:
+            st.info("⬆️ Please upload an Excel or CSV file to continue.")
             st.stop()
     else:
-        data_bytes = f"רק קודי משתמש- בדיקה לנגה (1).xlsx"
+        uploaded_file = f"רק קודי משתמש- בדיקה לנגה (1).xlsx"
     # --- only runs AFTER upload ---
 
     try:
         with st.spinner("Loading and preprocessing data..."):
-            df = load_processed_data(data_bytes)
+            df = load_processed_data(uploaded_file)
     except ValueError as e:
         # Always show a friendly, non-technical error to the user
-        st.error("❌ There is a problem with the data in your Excel file.")
+        st.error("❌ There is a problem with the data in your file.")
         st.error(str(e))
-        st.info("Please fix the rows mentioned above in your Excel file and upload it again.")
+        st.info("Please fix the rows mentioned above in your file and upload it again.")
         if trace_errors:
             st.write(str(traceback.format_exc()))
         return
