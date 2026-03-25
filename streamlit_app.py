@@ -322,8 +322,8 @@ def main(debug=False, trace_errors=False):
         with col2:
             uploaded_file = st.file_uploader(
                 "Upload data file",
-                type=["xlsx", "csv"],
-                help="Upload either a master workbook (.xlsx) or a CSV file (.csv)."
+                type=["xlsx", "csv", "txt"],
+                help="Upload either a master workbook (.xlsx) or a CSV file (.csv) or text (txt)."
             )
 
         # stop the app until file uploaded
