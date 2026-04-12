@@ -30,7 +30,7 @@ def _build_candidates(rel_paths: List[str]) -> List[Path]:
 # DATA_FILE =  "data/anon_master.xlsx"
 
 
-GROUPS_FILE = "tmp/data/טבלת הקצאה רנדומלית לתנאי הניסוי והבקרה.xlsx"
+GROUPS_FILE = "data/טבלת הקצאה רנדומלית לתנאי הניסוי והבקרה.xlsx"
 
 EXCLUDE_SHEETS = [
 #    "נשירה מחקרית",
